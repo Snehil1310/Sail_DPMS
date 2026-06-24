@@ -49,16 +49,33 @@ The application uses custom, secure routes mapped in the Spring Controller layer
 
 ---
 
-## 🔐 Test Credentials
+## 🔐 Login Credentials
 
-| Username | Password | Role | Assigned Plant / Unit |
-|---|---|---|---|
-| `admin` | `Admin@1234` | SAIL Admin | *Global Access* |
-| `dist_bhilai` | `dist123` | Distributor | Bhilai Steel Plant (BSP) |
-| `dist_bokaro` | `dist123` | Distributor | Bokaro Steel Plant (BSL) |
-| `dist_rourkela` | `dist123` | Distributor | Rourkela Steel Plant (RSP) |
+| Username | Password | Role | Distributor Name | Assigned Plant |
+|---|---|---|---|---|
+| `admin` | `Admin@1234` | SAIL Admin | — | *Global Access* |
+| `dist_1` | `Rahul@1234` | Distributor | Rajesh Kumar Sharma | Bhilai Steel Plant (BSP) |
+| `dist_2` | `Anita@5678` | Distributor | Anita Devi Singh | Bokaro Steel Plant (BSL) |
+| `dist_3` | `Manoj@9012` | Distributor | Manoj Kumar Patel | Rourkela Steel Plant (RSP) |
 
-> **Note**: Passwords can be entered using their complex format (`Admin@1234`) or simple testing fallbacks (`admin123`, `dist123`).
+> **Note**: Each distributor has a unique password. BCrypt-hashed passwords are stored in the database; plain-text fallbacks are available for development convenience.
+
+---
+
+## 📊 Seeded Production Data
+
+The `DataInitializer` automatically populates the database on first startup with realistic SAIL production data:
+
+| Data Type | Count | Details |
+|---|---|---|
+| SAIL Plants | 5 | BSP, BSL, RSP, DSP, ISP with capacity and product descriptions |
+| Central Inventory | 23 items | Products with BIS/IS grade specifications (Fe-500D, IS:2062, API 5L X-65, CRGO) |
+| Distributor Inventory | 7 items | Including 2 below-threshold alerts for low-stock notifications |
+| Sales Targets | 9 | FY 2025-26 quarterly targets across all 3 distributors |
+| Sales Entries | 12+ | Monthly records referencing real projects (PMAY, Raipur Metro, GAIL Pipeline) |
+| Orders | 9 | Full lifecycle: PENDING → APPROVED → PAID, plus REJECTED |
+| Payments | 4 | With SAIL transaction references (SAIL-TXN-YYYYMMDD-XX###) |
+| Ledger Entries | 10 | Double-entry records with running balances, dispatch details, and rail rake numbers |
 
 ---
 
@@ -79,7 +96,7 @@ From the root project directory, execute the following Maven command:
 mvn spring-boot:run
 ```
 - The application is configured with `spring.jpa.hibernate.ddl-auto=create`, which will automatically drop/recreate the tables and relationships on startup.
-- The `DataInitializer` bean will automatically seed the database with all plants, users, central inventory stocks, distributor stocks (including threshold warnings), and historical targets/entries.
+- The `DataInitializer` bean will automatically seed the database with all plants, users, inventories, orders, payments, ledger entries, and sales history.
 
 ### 3. Open in Browser
 Once the terminal logs show `Started SailDpmsApplication`, open your browser and navigate to:
@@ -87,3 +104,38 @@ Once the terminal logs show `Started SailDpmsApplication`, open your browser and
 http://localhost:8080
 ```
 *(This will automatically redirect to the secure landing page `/1a2b3c`)*
+
+---
+
+## 📁 Project Structure
+
+```
+sail-dpms/
+├── src/main/java/com/sail/dpms/
+│   ├── SailDpmsApplication.java          # Spring Boot entry point
+│   ├── config/
+│   │   ├── DataInitializer.java          # Database seeder with realistic data
+│   │   └── SecurityConfig.java           # Spring Security + CORS config
+│   ├── controller/
+│   │   ├── AuthController.java           # Login API (/api/auth/login)
+│   │   ├── RouteController.java          # Secure URL forwarding
+│   │   ├── AdminController.java          # Admin dashboard APIs
+│   │   ├── DistributorController.java    # Distributor APIs
+│   │   ├── InventoryController.java      # Inventory & threshold APIs
+│   │   ├── OrderController.java          # Order placement & approval APIs
+│   │   ├── PaymentController.java        # Payment processing APIs
+│   │   └── LedgerController.java         # Ledger & balance APIs
+│   ├── entity/                           # JPA Entities (9 tables)
+│   └── repository/                       # Spring Data JPA Repositories
+├── src/main/resources/
+│   ├── application.properties            # DB config & Hibernate settings
+│   └── static/
+│       ├── index.html                    # Landing page with carousel
+│       ├── signin.html                   # Login page
+│       ├── admin.html                    # Admin dashboard
+│       ├── distributor.html              # Distributor dashboard
+│       ├── css/style.css                 # Global styles
+│       └── js/app.js                     # Frontend logic & API calls
+└── pom.xml                               # Maven dependencies
+```
+
