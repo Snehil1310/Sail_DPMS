@@ -44,10 +44,16 @@ public class AuthController {
         User user = userOpt.get();
         boolean passwordMatches = passwordEncoder.matches(password, user.getPassword());
         if (!passwordMatches) {
-            if ("ADMIN".equals(user.getRole()) && ("Admin@1234".equals(password) || "admin123".equals(password))) {
+            // Fallback: match plain-text passwords directly for development convenience
+            if ("ADMIN".equals(user.getRole()) && "Admin@1234".equals(password)) {
                 passwordMatches = true;
-            } else if ("DISTRIBUTOR".equals(user.getRole()) && ("dist123".equals(password) || "Dist@1234".equals(password))) {
-                passwordMatches = true;
+            } else if ("DISTRIBUTOR".equals(user.getRole())) {
+                // Each distributor has a unique password
+                if (("dist_1".equals(username) && "Rahul@1234".equals(password)) ||
+                    ("dist_2".equals(username) && "Anita@5678".equals(password)) ||
+                    ("dist_3".equals(username) && "Manoj@9012".equals(password))) {
+                    passwordMatches = true;
+                }
             }
         }
 
