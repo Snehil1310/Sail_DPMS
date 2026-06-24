@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — SAIL DPMS</title>
+  <meta name="description" content="Sign in to the SAIL Distributor Performance Management System.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page-body">
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar">
+    <a href="/1a2b3c" class="navbar-brand">
+      <img src="images/sail-logo.png" alt="SAIL Logo" class="brand-logo">
+      <div>
+        <span>SAIL</span>
+        <span class="brand-subtitle">Steel Authority of India Limited</span>
+      </div>
+    </a>
+    <div class="navbar-nav">
+      <a href="/1a2b3c">Home</a>
+    </div>
+  </nav>
+
+  <!-- ===== LOGIN SECTION ===== -->
+  <main class="login-page">
+    <div class="login-wrapper">
+
+      <!-- Left side — branding -->
+      <div class="login-branding">
+        <img src="images/sail-logo.png" alt="SAIL" class="login-branding-logo">
+        <h1>Distributor Performance<br>Management System</h1>
+        <p>Track, manage, and optimise distributor performance across SAIL's nationwide distribution network.</p>
+        <div class="login-branding-stats">
+          <div class="login-stat">
+            <span class="login-stat-value">5</span>
+            <span class="login-stat-label">Steel Plants</span>
+          </div>
+          <div class="login-stat">
+            <span class="login-stat-value">20+ MT</span>
+            <span class="login-stat-label">Capacity</span>
+          </div>
+          <div class="login-stat">
+            <span class="login-stat-value">100+</span>
+            <span class="login-stat-label">Distributors</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right side — form -->
+      <div class="login-card">
+        <h2>Sign In to DPMS</h2>
+        <p class="login-subtitle">Enter your credentials to access the portal</p>
+
+        <div id="login-error" class="alert alert-error">
+          <span id="login-error-msg"></span>
+        </div>
+
+        <form id="login-form" autocomplete="off">
+          <div class="form-group">
+            <label class="form-label" for="username">Username</label>
+            <input type="text" id="username" class="form-input" placeholder="Enter your username" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+          </div>
+
+
+
+          <button type="button" class="btn btn-primary btn-block btn-lg mt-2" onclick="handleLoginClick()">Login</button>
+        </form>
+
+        <div class="login-footer-note">
+          <a href="/1a2b3c">← Back to Home</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer" style="margin-top: 0;">
+    © 2025 Steel Authority of India Limited. All rights reserved.
+  </footer>
+
+  <script src="js/app.js?v=5"></script>
+</body>
+</html>
+

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Distributor Dashboard — SAIL DPMS</title>
+  <link rel="stylesheet" href="css/style.css?v=5">
+  <script>
+    if (!localStorage.getItem('token') || localStorage.getItem('role') !== 'DISTRIBUTOR') {
+        window.location.replace('/2b3c4d');
+    }
+  </script>
+</head>
+<body id="distributor-page">
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar">
+    <a href="/1a2b3c" class="navbar-brand">
+      <img src="images/sail-logo.png" alt="SAIL Logo" class="brand-logo">
+      <span>SAIL DPMS</span>
+    </a>
+    <div class="navbar-nav">
+      <span class="nav-user">Welcome, <strong id="distributor-name">Distributor</strong></span>
+      <a href="#" id="logout-btn" class="btn btn-sm btn-danger">Logout</a>
+    </div>
+  </nav>
+
+  <div class="app-container">
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+      <div class="sidebar-nav">
+        <a href="#" class="sidebar-link active" data-target="sec-place-order">Place Order</a>
+        <a href="#" class="sidebar-link" data-target="sec-my-inventory">My Inventory</a>
+        <a href="#" class="sidebar-link" data-target="sec-my-orders">Order History</a>
+        <a href="#" class="sidebar-link" data-target="sec-my-ledger">My Ledger</a>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+      
+      <!-- ========================================== -->
+      <!--  ALERTS BOX (Global in Main Content)       -->
+      <!-- ========================================== -->
+      <div class="card mb-4 border-danger" id="alerts-box" style="display:none;">
+        <div class="card-header bg-danger text-white">⚠️ Low Stock Alerts</div>
+        <div class="card-body">
+          <ul id="alerts-list" style="margin:0; padding-left:20px; color:var(--danger); font-weight:500;">
+          </ul>
+        </div>
+      </div>
+
+      <!-- SECTION 1: PLACE ORDER -->
+      <section id="sec-place-order" class="view-section active">
+        <h1 class="page-title">Place New Order</h1>
+        <div class="card mb-4" id="place-order-card">
+          <div class="card-header">🛒 Order Form</div>
+          <div class="card-body">
+            <div id="order-submit-alert" class="alert"><span id="order-submit-msg"></span></div>
+            <form id="order-form" autocomplete="off">
+              <div class="form-group">
+                <label class="form-label" for="order-category">Product Category</label>
+                <select id="order-category" class="form-select" required>
+                  <option value="">-- Select Product --</option>
+                  <option value="TMT Bars 8mm">TMT Bars 8mm</option>
+                  <option value="TMT Bars 10mm">TMT Bars 10mm</option>
+                  <option value="TMT Bars 12mm">TMT Bars 12mm</option>
+                  <option value="HR Coils">HR Coils</option>
+                  <option value="CR Sheets">CR Sheets</option>
+                  <option value="GP Sheets">GP Sheets</option>
+                  <option value="Plates">Plates</option>
+                  <option value="Silicon Steel">Silicon Steel</option>
+                  <option value="Structural Steel">Structural Steel</option>
+                  <option value="Rails">Rails</option>
+                  <option value="Wire Rods">Wire Rods</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="order-quantity">Quantity (MT)</label>
+                <input type="number" id="order-quantity" class="form-input" min="1" step="0.01" required>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Submit Order</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: MY INVENTORY -->
+      <section id="sec-my-inventory" class="view-section">
+        <h1 class="page-title">My Inventory</h1>
+        <div class="card mb-4" id="my-inventory-card">
+          <div class="card-header">🏭 Stock Availability</div>
+          <div class="card-body">
+             <div class="table-wrapper scrollable-table-container">
+               <table class="data-table">
+                 <thead>
+                   <tr>
+                     <th>Product</th>
+                     <th>Current Stock</th>
+                     <th>Status</th>
+                     <th>Action</th>
+                   </tr>
+                 </thead>
+                 <tbody id="dist-inventory-tbody">
+                   <tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
+                 </tbody>
+               </table>
+             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: MY ORDERS -->
+      <section id="sec-my-orders" class="view-section">
+        <h1 class="page-title">Order History</h1>
+        <div class="card mb-4" id="my-orders-card">
+          <div class="card-header">📦 Previous & Pending Orders</div>
+          <div class="card-body">
+             <div class="table-wrapper scrollable-table-container">
+               <table class="data-table">
+                 <thead>
+                   <tr>
+                     <th>Placed On</th>
+                     <th>Product</th>
+                     <th>Qty</th>
+                     <th>Total Price</th>
+                     <th>Status</th>
+                     <th>Action</th>
+                   </tr>
+                 </thead>
+                 <tbody id="dist-orders-tbody">
+                   <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
+                 </tbody>
+               </table>
+             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: MY LEDGER -->
+      <section id="sec-my-ledger" class="view-section">
+        <h1 class="page-title">My Ledger</h1>
+        <div class="card mb-4" id="my-ledger-card">
+          <div class="card-header d-flex-between">
+              <span>💼 Account Balance</span>
+              <span class="badge badge-info" id="ledger-current-balance">Balance: 0.00</span>
+          </div>
+          <div class="card-body">
+             <div class="table-wrapper scrollable-table-container">
+               <table class="data-table">
+                 <thead>
+                   <tr>
+                     <th>Date</th>
+                     <th>Type</th>
+                     <th>Details</th>
+                     <th>Debit (You Owe)</th>
+                     <th>Credit (You Paid)</th>
+                     <th>Balance</th>
+                   </tr>
+                 </thead>
+                 <tbody id="dist-ledger-tbody">
+                   <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
+                 </tbody>
+               </table>
+             </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Payment Modal -->
+  <div id="payment-modal" class="modal hide" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+     <div style="background:#fff; padding:20px; border-radius:8px; width:400px; max-width:90%;">
+        <h3>Process Payment</h3>
+        <p class="text-muted mb-3" id="payment-order-details"></p>
+        <form id="payment-form">
+           <input type="hidden" id="payment-order-id">
+           <div class="form-group">
+              <label>Payment Method</label>
+              <select id="payment-method" class="form-select" required onchange="toggleCardField()">
+                  <option value="NET_BANKING">Net Banking</option>
+                  <option value="CREDIT_CARD">Credit Card</option>
+                  <option value="DEBIT_CARD">Debit Card</option>
+                  <option value="UPI">UPI</option>
+              </select>
+           </div>
+           <div class="form-group" id="card-field" style="display:none;">
+              <label>Card Last 4 Digits</label>
+              <input type="text" id="payment-card" class="form-input" maxlength="4" pattern="\d{4}">
+           </div>
+           <div style="display:flex; gap:10px; margin-top:15px;">
+              <button type="submit" class="btn btn-primary flex-1">Pay Now</button>
+              <button type="button" class="btn btn-outline flex-1" onclick="closePaymentModal()">Cancel</button>
+           </div>
+        </form>
+     </div>
+  </div>
+
+  <!-- Record Sale Modal -->
+  <div id="sale-modal" class="modal hide" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+     <div style="background:#fff; padding:20px; border-radius:8px; width:400px; max-width:90%;">
+        <h3>Record Sale</h3>
+        <p class="text-muted mb-3" id="sale-product-details"></p>
+        <form id="sale-form">
+           <input type="hidden" id="sale-product-category">
+           <div class="form-group">
+              <label>Quantity Sold (MT)</label>
+              <input type="number" id="sale-quantity" class="form-input" required min="1" step="0.01">
+           </div>
+           <div class="form-group">
+              <label>Selling Price (per MT)</label>
+              <input type="number" id="sale-price" class="form-input" required min="1" step="0.01">
+           </div>
+           <div class="d-flex" style="gap:10px;">
+               <button type="button" class="btn btn-secondary flex-1" onclick="window.closeSaleModal()">Cancel</button>
+               <button type="submit" class="btn btn-primary flex-1">Confirm Sale</button>
+           </div>
+        </form>
+     </div>
+  </div>
+
+  <footer class="footer" style="position: relative; z-index: 10;">© 2026 Steel Authority of India Limited.</footer>
+  
+  <script>
+    function toggleCardField() {
+        var method = document.getElementById('payment-method').value;
+        var field = document.getElementById('card-field');
+        if(method === 'CREDIT_CARD' || method === 'DEBIT_CARD') {
+            field.style.display = 'block';
+            document.getElementById('payment-card').required = true;
+        } else {
+            field.style.display = 'none';
+            document.getElementById('payment-card').required = false;
+        }
+    }
+  </script>
+  <script src="js/app.js?v=5"></script>
+</body>
+</html>
+

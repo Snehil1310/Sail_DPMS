@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — SAIL DPMS</title>
+  <link rel="stylesheet" href="css/style.css?v=5">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    if (!localStorage.getItem('token') || localStorage.getItem('role') !== 'ADMIN') {
+        window.location.replace('/2b3c4d');
+    }
+  </script>
+</head>
+<body id="admin-page">
+
+  <!-- Plant Inventory Detail Modal -->
+  <div id="plant-inventory-modal" class="modal hide" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+     <div style="background:#fff; padding:20px; border-radius:8px; width:800px; max-width:90%; max-height: 90vh; display: flex; flex-direction: column;">
+        <div class="d-flex-between" style="margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <h3 id="plant-modal-title" style="margin: 0;">Plant Inventory</h3>
+                <button id="add-product-btn" class="btn btn-sm btn-primary">+ Add Product</button>
+            </div>
+            <button class="btn btn-outline" onclick="closePlantInventoryModal()" style="padding: 4px 8px; border: none; font-size: 20px;">&times;</button>
+        </div>
+        <div class="table-wrapper scrollable-table-container" style="overflow-y: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                            <th>Product Category</th>
+                            <th>Current Stock (MT)</th>
+                            <th>Threshold (MT)</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="plant-modal-tbody">
+                    <!-- Populated via JS -->
+                </tbody>
+            </table>
+        </div>
+     </div>
+  </div>
+
+  <!-- Add Product Modal -->
+  <div id="add-product-modal" class="modal hide" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1050; align-items:center; justify-content:center;">
+     <div style="background:#fff; padding:20px; border-radius:8px; width:400px; max-width:90%;">
+        <h3 style="margin-top:0;">Add Product</h3>
+        <form id="add-product-form" onsubmit="submitNewPlantProduct(event)">
+            <input type="hidden" id="add-product-unitcode">
+            <div class="form-group">
+                <label class="form-label" for="add-product-category">Product Category</label>
+                <select id="add-product-category" class="form-select" required>
+                    <option value="">-- Select Product --</option>
+                    <option value="TMT Bars 8mm">TMT Bars 8mm</option>
+                    <option value="TMT Bars 10mm">TMT Bars 10mm</option>
+                    <option value="Wire Rods">Wire Rods</option>
+                    <option value="Structural Steel">Structural Steel</option>
+                    <option value="Railway Wheels">Railway Wheels</option>
+                    <option value="Pig Iron">Pig Iron</option>
+                    <option value="HR Coils">HR Coils</option>
+                    <option value="CR Coils">CR Coils</option>
+                    <option value="Galvanized Steel">Galvanized Steel</option>
+                    <option value="Plates">Plates</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="add-product-quantity">Initial Quantity (MT)</label>
+                <input type="number" id="add-product-quantity" class="form-input" min="0" step="0.01" required>
+            </div>
+            <div class="d-flex" style="gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button type="button" class="btn btn-outline" onclick="closeAddProductModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Product</button>
+            </div>
+        </form>
+     </div>
+  </div>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar">
+    <a href="/1a2b3c" class="navbar-brand">
+      <img src="images/sail-logo.png" alt="SAIL Logo" class="brand-logo">
+      <span>SAIL DPMS</span>
+    </a>
+    <div class="navbar-nav">
+      <span class="nav-user">Welcome, <strong id="admin-name">Admin</strong></span>
+      <a href="#" id="logout-btn" class="btn btn-sm btn-danger">Logout</a>
+    </div>
+  </nav>
+
+  <div class="app-container">
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+      <div class="sidebar-nav">
+        <a href="#" class="sidebar-link active" data-target="sec-dashboard">Dashboard Overview</a>
+        <a href="#" class="sidebar-link" data-target="sec-plant-inventory">Distributor Inventory</a>
+        <a href="#" class="sidebar-link" data-target="sec-orders">Orders</a>
+        <a href="#" class="sidebar-link" data-target="sec-distributors">Distributors & Targets</a>
+        <a href="#" class="sidebar-link" data-target="sec-ledger">Ledger Analysis</a>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+      
+      <!-- SECTION 1: DASHBOARD OVERVIEW -->
+      <section id="sec-dashboard" class="view-section active">
+        <h1 class="page-title">Admin Dashboard</h1>
+        <div id="overview-metrics" class="grid-4 mb-4">
+          <div class="metric-card border-blue">
+            <div class="metric-icon">📊</div>
+            <div class="metric-value" id="total-distributors">—</div>
+            <div class="metric-label">Total Distributors</div>
+          </div>
+          <div class="metric-card border-green">
+            <div class="metric-icon">📦</div>
+            <div class="metric-value" id="total-revenue">—</div>
+            <div class="metric-label">Total Sales Volume</div>
+          </div>
+          <div class="metric-card border-orange">
+            <div class="metric-icon">⚠️</div>
+            <div class="metric-value" id="pending-orders-count">—</div>
+            <div class="metric-label">Pending Orders</div>
+          </div>
+          <div class="metric-card border-danger">
+            <div class="metric-icon">📉</div>
+            <div class="metric-value" id="low-stock-count">—</div>
+            <div class="metric-label">Low Stock Alerts</div>
+          </div>
+        </div>
+
+        <h2 class="page-title mt-4">SAIL Plant Capacity & Stock</h2>
+        <div id="plant-boxes-container" class="grid-3 mb-4">
+          <!-- Plant boxes injected here via JS -->
+          <div class="text-center text-muted" style="grid-column: 1 / -1;">Loading plants...</div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: DISTRIBUTOR INVENTORY -->
+      <section id="sec-plant-inventory" class="view-section">
+        <h1 class="page-title">Distributor Inventory</h1>
+        
+        <h2 class="page-title mt-4">Distributor Inventory Alerts</h2>
+        <div class="card mb-4" id="inventory-card">
+          <div class="card-header d-flex-between">
+            <span>🏢 Distributor Low Stock Alerts</span>
+            <button class="btn btn-sm btn-primary" id="add-inventory-btn" onclick="openInventoryModal()">+ Update Distributor Stock</button>
+          </div>
+          <div class="card-body">
+            <div class="table-wrapper scrollable-table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Distributor</th>
+                    <th>Product</th>
+                    <th>Stock (MT)</th>
+                    <th>Threshold</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="inventory-tbody">
+                  <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: ORDERS -->
+      <section id="sec-orders" class="view-section">
+        <h1 class="page-title">Orders</h1>
+        <div class="card mb-4" id="orders-card">
+          <div class="card-header">
+            <div class="tabs" style="margin-bottom: 0;">
+              <button class="tab-btn active" data-tab="tab-pending-orders">Pending Orders</button>
+              <button class="tab-btn" data-tab="tab-order-history">Order History</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="tab-content active" id="tab-pending-orders">
+              <div class="table-wrapper scrollable-table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Distributor</th>
+                      <th>Product</th>
+                      <th>Qty (MT)</th>
+                      <th>Total Price</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pending-orders-tbody">
+                    <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div class="tab-content" id="tab-order-history">
+              <div class="table-wrapper scrollable-table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Distributor</th>
+                      <th>Product</th>
+                      <th>Qty (MT)</th>
+                      <th>Total Price</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="order-history-tbody">
+                    <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: DISTRIBUTORS & TARGETS -->
+      <section id="sec-distributors" class="view-section">
+        <h1 class="page-title">Distributors & Targets</h1>
+        <div class="card mb-4" id="distributors-card">
+          <div class="card-header d-flex-between align-items-center">
+            <span>🏢 SAIL Distributors</span>
+          </div>
+          <div class="card-body">
+            <div id="distributors-grid" class="distributors-grid">
+              <div class="text-center text-muted" style="padding: 32px; grid-column: 1 / -1;">Loading...</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Management Section (Forms) -->
+        <div class="card mb-4" id="management">
+          <div class="card-header">Management Actions</div>
+          <div class="card-body">
+            <div class="tabs">
+              <button class="tab-btn active" data-tab="tab-add-distributor">Add Distributor</button>
+              <button class="tab-btn" data-tab="tab-assign-target">Assign Target</button>
+            </div>
+            
+            <div class="tab-content active" id="tab-add-distributor">
+              <div id="add-dist-alert" class="alert"><span id="add-dist-msg"></span></div>
+              <form id="add-distributor-form" autocomplete="off">
+                <div class="grid-2">
+                  <div class="form-group"><label class="form-label" for="dist-username">Username</label><input type="text" id="dist-username" class="form-input" required></div>
+                  <div class="form-group"><label class="form-label" for="dist-password">Password</label><input type="password" id="dist-password" class="form-input" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}" title="Must contain at least one number, one uppercase and lowercase letter, one special character (@$!%*?&), and at least 8 or more characters" required></div>
+                  <div class="form-group"><label class="form-label" for="dist-fullname">Full Name</label><input type="text" id="dist-fullname" class="form-input" required></div>
+                  <div class="form-group"><label class="form-label" for="dist-unit">SAIL Unit</label><select id="dist-unit" class="form-select" required><option value="">-- Select --</option></select></div>
+                  <div class="form-group"><label class="form-label" for="dist-email">Email</label><input type="email" id="dist-email" class="form-input" required></div>
+                  <div class="form-group"><label class="form-label" for="dist-phone">Phone</label><input type="text" id="dist-phone" class="form-input" required></div>
+                  <div class="form-group"><label class="form-label" for="dist-region">Region</label><input type="text" id="dist-region" class="form-input" required></div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Add Distributor</button>
+              </form>
+            </div>
+  
+            <div class="tab-content" id="tab-assign-target">
+               <div id="assign-target-alert" class="alert"><span id="assign-target-msg"></span></div>
+               <form id="assign-target-form" autocomplete="off">
+                  <div class="grid-2">
+                    <div class="form-group">
+                      <label class="form-label" for="target-distributor">Distributor</label>
+                      <select id="target-distributor" class="form-select" required></select>
+                    </div>
+                    <div class="form-group"><label class="form-label">Volume (MT)</label><input type="number" id="target-amount" class="form-input" required></div>
+                    <div class="form-group"><label class="form-label">Fiscal Year</label><select id="target-fy" class="form-select" required><option value="2025-26">2025-26</option></select></div>
+                    <div class="form-group"><label class="form-label">Quarter</label><select id="target-quarter" class="form-select" required><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select></div>
+                  </div>
+                  <button type="submit" class="btn btn-primary mt-2">Assign</button>
+               </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 5: LEDGER ANALYSIS -->
+      <section id="sec-ledger" class="view-section">
+        <h1 class="page-title">Ledger Analysis</h1>
+        
+        <div class="card mb-4">
+          <div class="card-body d-flex-between align-items-center">
+             <label for="ledger-distributor-select" style="font-weight: bold;">Select Distributor: </label>
+             <select id="ledger-distributor-select" class="form-select" style="max-width: 300px;">
+                <option value="">-- Choose Distributor --</option>
+             </select>
+          </div>
+        </div>
+
+        <div id="analysis-view" class="hide">
+          <div class="card mb-4 border-blue">
+            <div class="card-body">
+               <h2 id="analysis-dist-name" style="color: var(--primary);">Distributor Name</h2>
+               <p id="analysis-unit-name" class="text-secondary">Unit Name</p>
+            </div>
+          </div>
+  
+          <div class="grid-3 mb-4">
+            <div class="metric-card border-green">
+               <div class="metric-value" id="analysis-total-sales">0 MT</div><div class="metric-label">Sales Achieved</div>
+            </div>
+            <div class="metric-card border-orange">
+               <div class="metric-value" id="analysis-total-target">0 MT</div><div class="metric-label">Target Assigned</div>
+            </div>
+            <div class="metric-card border-blue text-center">
+               <div class="metric-value" id="analysis-balance">0.00</div><div class="metric-label">Current Ledger Balance</div>
+            </div>
+          </div>
+  
+          <!-- Ledger Overview Box -->
+          <div class="card mb-4">
+            <div class="card-header">💼 Complete Ledger</div>
+            <div class="card-body">
+               <div class="table-wrapper scrollable-table-container">
+                  <table class="data-table">
+                     <thead>
+                        <tr>
+                           <th>Date</th>
+                           <th>Type</th>
+                           <th>Details</th>
+                           <th>Debit</th>
+                           <th>Credit</th>
+                           <th>Balance</th>
+                        </tr>
+                     </thead>
+                     <tbody id="analysis-ledger-tbody"></tbody>
+                  </table>
+               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Inventory Update Modal -->
+  <div id="inventory-modal" class="modal hide" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+     <div style="background:#fff; padding:20px; border-radius:8px; width:400px; max-width:90%;">
+        <h3>Update Distributor Inventory</h3>
+        <form id="inventory-form">
+           <div class="form-group">
+              <label>Distributor</label>
+              <select id="inv-distributor" class="form-select" required></select>
+           </div>
+           <div class="form-group">
+              <label>Product Category</label>
+              <input type="text" id="inv-product" class="form-input" required>
+           </div>
+           <div class="form-group">
+              <label>Quantity (MT)</label>
+              <input type="number" id="inv-quantity" class="form-input" required>
+           </div>
+           <div class="form-group">
+              <label>Alert Threshold (MT)</label>
+              <input type="number" id="inv-threshold" class="form-input" required>
+           </div>
+           <div class="form-group">
+              <label>Price Per MT</label>
+              <input type="number" id="inv-price" class="form-input" required>
+           </div>
+           <div style="display:flex; gap:10px; margin-top:15px;">
+              <button type="submit" class="btn btn-primary flex-1">Save</button>
+              <button type="button" class="btn btn-outline flex-1" onclick="closeInventoryModal()">Cancel</button>
+           </div>
+        </form>
+     </div>
+  </div>
+
+  <footer class="footer" style="position: relative; z-index: 10;">© 2026 Steel Authority of India Limited.</footer>
+  <script src="js/app.js?v=5"></script>
+</body>
+</html>
+
